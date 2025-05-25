@@ -1,0 +1,136 @@
+CREATE DATABASE IF NOT EXISTS MovieDB;
+USE MovieDB;
+
+DROP TABLE IF EXISTS Movie_Actors, Movie_Genres, Reviews, Movies, Actors, Directors, Genres;
+
+-- Directors table
+CREATE TABLE Directors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+-- Movies table
+CREATE TABLE Movies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    release_year INT,
+    director_id INT,
+    FOREIGN KEY (director_id) REFERENCES Directors(id)
+        ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- Actors table
+CREATE TABLE Actors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+-- Genres table
+CREATE TABLE Genres (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+-- Reviews table
+CREATE TABLE Reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT,
+    rating INT CHECK (rating BETWEEN 1 AND 10),
+    comment TEXT,
+    FOREIGN KEY (movie_id) REFERENCES Movies(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Movie-Actor association table
+CREATE TABLE Movie_Actors (
+    movie_id INT,
+    actor_id INT,
+    PRIMARY KEY (movie_id, actor_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES Actors(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Movie-Genre association table
+CREATE TABLE Movie_Genres (
+    movie_id INT,
+    genre_id INT,
+    PRIMARY KEY (movie_id, genre_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES Genres(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Insert Directors
+INSERT INTO Directors (name) VALUES 
+('Christopher Nolan'),       -- 1
+('Steven Spielberg'),        -- 2
+('Quentin Tarantino');       -- 3
+
+-- Insert Movies
+INSERT INTO Movies (title, release_year, director_id) VALUES
+('Inception', 2010, 1),              -- 1
+('Jurassic Park', 1993, 2),          -- 2
+('Pulp Fiction', 1994, 3),           -- 3
+('Interstellar', 2014, 1);           -- 4
+
+-- Insert Actors
+INSERT INTO Actors (name) VALUES
+('Leonardo DiCaprio'),       -- 1
+('Sam Neill'),               -- 2
+('John Travolta'),           -- 3
+('Matthew McConaughey'),     -- 4
+('Morgan Freeman');          -- 5
+
+-- Insert Genres
+INSERT INTO Genres (name) VALUES
+('Sci-Fi'),                  -- 1
+('Adventure'),               -- 2
+('Crime'),                   -- 3
+('Drama');                   -- 4
+
+-- Insert Reviews
+INSERT INTO Reviews (movie_id, rating, comment) VALUES
+(1, 9, 'Mind-bending and visually stunning.'),
+(2, 8, 'A timeless adventure with dinosaurs.'),
+(3, 9, 'A masterclass in storytelling.'),
+(4, 10, 'Emotionally powerful and scientifically thrilling.');
+
+-- Insert Movie-Actor relationships
+INSERT INTO Movie_Actors (movie_id, actor_id) VALUES
+(1, 1),  -- Inception - Leonardo DiCaprio
+(2, 2),  -- Jurassic Park - Sam Neill
+(3, 3),  -- Pulp Fiction - John Travolta
+(4, 4),  -- Interstellar - Matthew McConaughey
+(4, 5);  -- Interstellar - Morgan Freeman (imaginary for variety)
+
+-- Insert Movie-Genre relationships
+INSERT INTO Movie_Genres (movie_id, genre_id) VALUES
+(1, 1),  -- Inception - Sci-Fi
+(1, 4),  -- Inception - Drama
+(2, 2),  -- Jurassic Park - Adventure
+(2, 1),  -- Jurassic Park - Sci-Fi
+(3, 3),  -- Pulp Fiction - Crime
+(3, 4),  -- Pulp Fiction - Drama
+(4, 1),  -- Interstellar - Sci-Fi
+(4, 4);  -- Interstellar - Drama
+
+-- JOIN query showing complete movie info with actors, genres, director, and reviews
+SELECT 
+    m.title AS Movie_Title,
+    m.release_year AS Release_Year,
+    d.name AS Director,
+    a.name AS Actor,
+    g.name AS Genre,
+    r.rating AS Rating,
+    r.comment AS Review
+FROM Movies m
+JOIN Directors d ON m.director_id = d.id
+JOIN Reviews r ON m.id = r.movie_id
+JOIN Movie_Actors ma ON m.id = ma.movie_id
+JOIN Actors a ON ma.actor_id = a.id
+JOIN Movie_Genres mg ON m.id = mg.movie_id
+JOIN Genres g ON mg.genre_id = g.id
+ORDER BY m.id, a.name, g.name;
